@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8843418972872834074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c601c63f7f301754381201e3204e79c3, type: 3}
+  m_Name: AtmosphereRF
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  settings:
+    CS: {fileID: 7200000, guid: fe0f8a511266cb74e85fde2d0dfbbdd4, type: 3}
+    GroundRadius: 6360000
+    SeaLevel: -1
+    MultiScatteringScale: 1
+    AtmosphereHeight: 60000
+    RayleighScatteringScale: 1
+    RayleighExponentialDistribution: 8000
+    MieScatteringScale: 1
+    MieAnisotropy: 0.8
+    MieExponentialDistribution: 1200
+    OzoneAbsorptionScale: 1
+    OzoneTentTipAltitude: 25000
+    OzoneTentWidth: 15000
+    SunLightColor: {r: 1, g: 1, b: 1, a: 1}
+    SunLightIntensity: 30
+    SunDiskAngle: 1.5
+    AerialPerspectiveDistance: 32000
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17,8 +48,10 @@ MonoBehaviour:
       type: 3}
   m_RendererFeatures:
   - {fileID: 3374970845456648582}
-  - {fileID: 231476145509241581}
-  m_RendererFeatureMap: 8649be421a4ed62eed120ef3535e3603
+  - {fileID: 8989544425144023678}
+  - {fileID: -8843418972872834074}
+  - {fileID: 4491190112961135655}
+  m_RendererFeatureMap: 8649be421a4ed62e7e7a4da90647c17ce603f7714cdd45852784cbc59ce9533e
   m_UseNativeRenderPass: 0
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
@@ -74,7 +107,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   setting:
-    passEvent: 500
+    passEvent: 550
     myMat: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
 --- !u!114 &3374970845456648582
 MonoBehaviour:
@@ -88,7 +121,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
   m_Name: ScreenSpaceAmbientOcclusion
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   m_Shader: {fileID: 4800000, guid: 0849e84e3d62649e8882e9d6f056a017, type: 3}
   m_Settings:
     Downsample: 0
@@ -99,3 +132,35 @@ MonoBehaviour:
     DirectLightingStrength: 0.25
     Radius: 0.035
     SampleCount: 4
+--- !u!114 &4491190112961135655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27906ec5d64556e4dbd83726f526d182, type: 3}
+  m_Name: VolumetricCloudFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  setting:
+    passEvent: 500
+    myMat: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
+--- !u!114 &8989544425144023678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ee34884cc6f0fb49ba03122f7c8a3cb, type: 3}
+  m_Name: AerialPerspectiveRF
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  mySetting:
+    passEvent: 550
+    AerialPerspecMat: {fileID: 2100000, guid: 0a307b5b87598324e95baf0e59a682f8, type: 2}

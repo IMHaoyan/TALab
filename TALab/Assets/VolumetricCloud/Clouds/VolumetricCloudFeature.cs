@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class myRayMarching : ScriptableRendererFeature
+public class VolumetricCloudFeature : ScriptableRendererFeature
 {
-    class CustomRenderPass : ScriptableRenderPass
+    class VolumetricCloudPass : ScriptableRenderPass
     {
         public Material passMat = null;
         public FilterMode passfiltMode { get; set; }
@@ -16,18 +16,14 @@ public class myRayMarching : ScriptableRendererFeature
         Matrix4x4 frustumCorners;
 
         GameObject passGo;
-        ProfilingSampler passProfilingSampler = new ProfilingSampler("myRaymarchingProfiling");
-        public CustomRenderPass(RenderPassEvent passEvent, Material material, GameObject go)
+        ProfilingSampler passProfilingSampler = new ProfilingSampler("VolumetricCloudFeatureProfiling");
+        public VolumetricCloudPass(RenderPassEvent passEvent, Material material, GameObject go)
         {
             this.renderPassEvent = passEvent;
             this.passMat = material;
             this.passGo = go;
         }
 
-        public void setup(RenderTargetIdentifier source)
-        {
-            this.passSource = source;
-        }
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {   //类似于OnRenderImage
             if (passMat == null)
@@ -114,7 +110,7 @@ public class myRayMarching : ScriptableRendererFeature
     }
 
     public mySetting setting = new mySetting();
-    CustomRenderPass myPass;
+    VolumetricCloudPass myPass;
     GameObject GO;
     public override void Create()
     {//进行初始化,这里最先开始
@@ -124,7 +120,7 @@ public class myRayMarching : ScriptableRendererFeature
         {
             //Debug.Log("No Sphere!");
         }
-        myPass = new CustomRenderPass(setting.passEvent, setting.myMat, GO);//实例化一下并传参数,name就是tag
+        myPass = new VolumetricCloudPass(setting.passEvent, setting.myMat, GO);//实例化一下并传参数,name就是tag
     }
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
@@ -136,10 +132,7 @@ public class myRayMarching : ScriptableRendererFeature
         }
         renderer.EnqueuePass(myPass);
     }
-    // public override void SetupRenderPasses(ScriptableRenderer renderer, in RenderingData renderingData)
-    // {
-    //     myPass.setup(renderer.cameraColorTarget);
-    // }
+    
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);

@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class AtmosphereRenderFeature : ScriptableRendererFeature
+public class AtmosphereRF : ScriptableRendererFeature
 {
-    class CustomRenderPass : ScriptableRenderPass
+    class AtmosphereRenderPass : ScriptableRenderPass
     {
         public Settings atmosphereSettings;
         RenderTexture m_transmittanceLut;
@@ -97,7 +97,7 @@ public class AtmosphereRenderFeature : ScriptableRendererFeature
         }
     }
 
-    CustomRenderPass m_ScriptablePass;
+    AtmosphereRenderPass m_ScriptablePass;
     [System.Serializable]
     public class Settings
     {
@@ -136,7 +136,7 @@ public class AtmosphereRenderFeature : ScriptableRendererFeature
 
     public override void Create()
     {
-        m_ScriptablePass = new CustomRenderPass();
+        m_ScriptablePass = new AtmosphereRenderPass();
         m_ScriptablePass.renderPassEvent = RenderPassEvent.BeforeRendering;
         m_ScriptablePass.atmosphereSettings = settings;
     }

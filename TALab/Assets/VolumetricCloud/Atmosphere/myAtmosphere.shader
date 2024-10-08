@@ -23,6 +23,7 @@ Shader "CasualAtmosphere/myAtmosphere" {
 
             Texture2D _TransmittanceLut;
             Texture2D _SkyViewLut;
+            SAMPLER(sampler_LinearClamp);
 
             struct a2v {
                 float4 positionOS : POSITION;

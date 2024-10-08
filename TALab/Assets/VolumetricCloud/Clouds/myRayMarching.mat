@@ -64,7 +64,7 @@ Material:
     - _MaxStepSize: 10000
     - _TEST: 1
     - _WindSpeed: 1
-    - _ZFar: 24248.71
+    - _ZFar: 30000
     - _albedo: 0.9
     - _ambientlerp: 0.031
     - _baseShapeDetailEffect: 0.528
