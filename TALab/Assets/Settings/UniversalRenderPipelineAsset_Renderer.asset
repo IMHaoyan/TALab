@@ -146,7 +146,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   setting:
-    passEvent: 500
+    passEvent: 550
     myMat: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
 --- !u!114 &8989544425144023678
 MonoBehaviour:
