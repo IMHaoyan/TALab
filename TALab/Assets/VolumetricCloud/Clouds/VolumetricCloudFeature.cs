@@ -7,37 +7,33 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
     class VolumetricCloudPass : ScriptableRenderPass
     {
         public Material passMat;
-        RenderTargetIdentifier passSource { get; set; } //源图像，目标图像
+        public string cmdName;
+        RenderTargetIdentifier passSource;
         int passTempTexID = Shader.PropertyToID("_CloudTex");
 
         //云纹理的宽度
         public int width;
+
         //云纹理的高度
         public int height;
-        
+
         Matrix4x4 frustumCorners;
 
         ProfilingSampler passProfilingSampler = new ProfilingSampler("VolumetricCloudFeatureProfiling");
 
-        public VolumetricCloudPass(Setting setting)
+        public VolumetricCloudPass(Setting setting, string name)
         {
-            this.renderPassEvent = setting.passEvent;
-            this.passMat = setting.cloudMaterial;
+            passMat = setting.cloudMaterial;
+            cmdName = name;
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            //类似于OnRenderImage
-            if (passMat == null)
-            {
-                Debug.LogError("材质球丢失！请设置材质球");
-                return;
-            }
-
-            CommandBuffer cmd = CommandBufferPool.Get("Volumetric Cloud");
+            CommandBuffer cmd = CommandBufferPool.Get(cmdName);
             using (new ProfilingScope(cmd, passProfilingSampler))
             {
             #region 射线法重建世界坐标
+
                 Camera camera = renderingData.cameraData.camera;
                 Matrix4x4 currentViewProjectionMatrix = camera.projectionMatrix * camera.worldToCameraMatrix;
                 Matrix4x4 currentViewProjectionInverseMatrix = currentViewProjectionMatrix.inverse;
@@ -72,25 +68,23 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
                 frustumCorners.SetRow(3, topLeft);
                 passMat.SetMatrix("_FrustumCornersRay", frustumCorners);
                 passMat.SetFloat("_ZFar", camera.farClipPlane);
+
             #endregion
-                
-                RenderTextureDescriptor CameraTexDesc = renderingData.cameraData.cameraTargetDescriptor;
-                CameraTexDesc.depthBufferBits = 0;
+
                 cmd.GetTemporaryRT(passTempTexID, width, height, 0,
                     filter: FilterMode.Bilinear);
-                
+
                 passSource = renderingData.cameraData.renderer.cameraColorTarget;
                 cmd.Blit(passSource, passTempTexID, passMat, 0);
                 cmd.Blit(passTempTexID, passSource, passMat, 1);
             }
 
             context.ExecuteCommandBuffer(cmd); //执行命令
-            CommandBufferPool.Release(cmd); //释放回收
+            CommandBufferPool.Release(cmd); //释放回收 
         }
 
-        public override void FrameCleanup(CommandBuffer cmd)
+        public override void OnCameraCleanup(CommandBuffer cmd)
         {
-            base.FrameCleanup(cmd);
             cmd.ReleaseTemporaryRT(passTempTexID);
         }
     }
@@ -130,7 +124,8 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
 
     public override void Create()
     {
-        volumetricCloudPass = new VolumetricCloudPass(setting); //实例化一下并传参数,name就是tag
+        volumetricCloudPass = new VolumetricCloudPass(setting, this.name); //实例化一下并传参数,name就是tag
+        volumetricCloudPass.renderPassEvent = setting.passEvent;
     }
 
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -152,7 +147,7 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
         int height = (int)(renderingData.cameraData.cameraTargetDescriptor.height * setting.rtScale);
 
         //不进行分帧渲染
-        if ( true|| setting.frameBlocking == FrameBlock._Off)
+        if (true || setting.frameBlocking == FrameBlock._Off)
         {
             // for (int i = 0; i < 2; i++)
             // {
@@ -169,11 +164,5 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
             renderer.EnqueuePass(volumetricCloudPass);
             return;
         }
-
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
     }
 }

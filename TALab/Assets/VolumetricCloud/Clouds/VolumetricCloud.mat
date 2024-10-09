@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: myRayMarching
+  m_Name: VolumetricCloud
   m_Shader: {fileID: 4800000, guid: efbf066279dba484abe6f4c1f954fde6, type: 3}
   m_ValidKeywords: []
   m_InvalidKeywords:
