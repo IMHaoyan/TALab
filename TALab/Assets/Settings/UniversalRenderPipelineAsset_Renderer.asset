@@ -107,8 +107,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   setting:
+    cloudMaterial: {fileID: 0}
     passEvent: 550
-    myMat: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
+    rtScale: 0.5
+    frameBlocking: 16
+    shieldWidth: 400
+    isFrameDebug: 0
+    frameDebug: 1
 --- !u!114 &3374970845456648582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,7 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f62c9c65cf3354c93be831c8bc075510, type: 3}
   m_Name: ScreenSpaceAmbientOcclusion
   m_EditorClassIdentifier: 
-  m_Active: 0
+  m_Active: 1
   m_Shader: {fileID: 4800000, guid: 0849e84e3d62649e8882e9d6f056a017, type: 3}
   m_Settings:
     Downsample: 0
@@ -146,8 +151,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Active: 1
   setting:
-    passEvent: 550
-    myMat: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
+    cloudMaterial: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
+    passEvent: 600
+    rtScale: 1
+    frameBlocking: 16
+    shieldWidth: 600
+    isFrameDebug: 0
+    frameDebug: 1
 --- !u!114 &8989544425144023678
 MonoBehaviour:
   m_ObjectHideFlags: 0

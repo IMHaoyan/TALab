@@ -6,34 +6,38 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
 {
     class VolumetricCloudPass : ScriptableRenderPass
     {
-        public Material passMat = null;
-        public FilterMode passfiltMode { get; set; }
-        RenderTargetIdentifier passSource { get; set; }//源图像，目标图像
-        int passTempTexID, passTempTexID1;//临时计算图像
-                                          //RenderTargetIdentifier、RenderTargetHandle都可以理解为RT
-                                          //Identifier为camera提供的需要被应用的texture，Handle为被shader处理渲染过的RT
+        public Material passMat;
+        RenderTargetIdentifier passSource { get; set; } //源图像，目标图像
+        int passTempTexID = Shader.PropertyToID("_CloudTex");
 
+        //云纹理的宽度
+        public int width;
+        //云纹理的高度
+        public int height;
+        
         Matrix4x4 frustumCorners;
 
-        GameObject passGo;
         ProfilingSampler passProfilingSampler = new ProfilingSampler("VolumetricCloudFeatureProfiling");
-        public VolumetricCloudPass(RenderPassEvent passEvent, Material material, GameObject go)
+
+        public VolumetricCloudPass(Setting setting)
         {
-            this.renderPassEvent = passEvent;
-            this.passMat = material;
-            this.passGo = go;
+            this.renderPassEvent = setting.passEvent;
+            this.passMat = setting.cloudMaterial;
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {   //类似于OnRenderImage
+        {
+            //类似于OnRenderImage
             if (passMat == null)
             {
                 Debug.LogError("材质球丢失！请设置材质球");
                 return;
             }
-            CommandBuffer cmd = CommandBufferPool.Get("my cloud");
+
+            CommandBuffer cmd = CommandBufferPool.Get("Volumetric Cloud");
             using (new ProfilingScope(cmd, passProfilingSampler))
             {
+            #region 射线法重建世界坐标
                 Camera camera = renderingData.cameraData.camera;
                 Matrix4x4 currentViewProjectionMatrix = camera.projectionMatrix * camera.worldToCameraMatrix;
                 Matrix4x4 currentViewProjectionInverseMatrix = currentViewProjectionMatrix.inverse;
@@ -68,33 +72,22 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
                 frustumCorners.SetRow(3, topLeft);
                 passMat.SetMatrix("_FrustumCornersRay", frustumCorners);
                 passMat.SetFloat("_ZFar", camera.farClipPlane);
-
-                Vector4 position = new Vector4(0, 2, 0, 0);
-                float radius = 2f;
-                if (passGo != null)
-                {
-                    position = passGo.GetComponent<Transform>().position;
-                    radius = passGo.GetComponent<Transform>().lossyScale.x / 2.0f;
-                }
-                passMat.SetVector("_position", position);
-                passMat.SetFloat("_radius", radius);
+            #endregion
+                
                 RenderTextureDescriptor CameraTexDesc = renderingData.cameraData.cameraTargetDescriptor;
-                //CameraTexDesc.depthBufferBits = 0;
-                CameraTexDesc.msaaSamples = 1;
-                //cmd.GetTemporaryRT(passTempTexID, CameraTexDesc, passfiltMode);//申请一个临时图像
-                int _Scale = 1;
-                //depth???
-                cmd.GetTemporaryRT(passTempTexID, CameraTexDesc.width / _Scale, CameraTexDesc.height / _Scale, 0, filter: FilterMode.Bilinear);
-                cmd.GetTemporaryRT(passTempTexID1, CameraTexDesc.width / _Scale, CameraTexDesc.height / _Scale, 0, filter: FilterMode.Bilinear);
+                CameraTexDesc.depthBufferBits = 0;
+                cmd.GetTemporaryRT(passTempTexID, width, height, 0,
+                    filter: FilterMode.Bilinear);
                 
                 passSource = renderingData.cameraData.renderer.cameraColorTarget;
-                cmd.Blit(passSource, passTempTexID);
-                cmd.Blit(passTempTexID, passTempTexID1, passMat);
-                cmd.Blit(passTempTexID1, passSource);
+                cmd.Blit(passSource, passTempTexID, passMat, 0);
+                cmd.Blit(passTempTexID, passSource, passMat, 1);
             }
-            context.ExecuteCommandBuffer(cmd);//执行命令
-            CommandBufferPool.Release(cmd);//释放回收
+
+            context.ExecuteCommandBuffer(cmd); //执行命令
+            CommandBufferPool.Release(cmd); //释放回收
         }
+
         public override void FrameCleanup(CommandBuffer cmd)
         {
             base.FrameCleanup(cmd);
@@ -102,40 +95,85 @@ public class VolumetricCloudFeature : ScriptableRendererFeature
         }
     }
 
-    [System.Serializable]
-    public class mySetting
+    public enum FrameBlock
     {
+        _Off = 1,
+        _2x2 = 4,
+        _4x4 = 16
+    }
+
+    [System.Serializable]
+    public class Setting
+    {
+        public Material cloudMaterial;
+
         public RenderPassEvent passEvent = RenderPassEvent.AfterRenderingTransparents;
-        public Material myMat;
+
+        //分辨率缩放
+        [Range(0.1f, 1)] public float rtScale = 0.5f;
+
+        //分帧渲染
+        public FrameBlock frameBlocking = FrameBlock._4x4;
+
+        //屏蔽相机分辨率宽度(受纹理缩放影响)
+        [Range(100, 600)] public int shieldWidth = 400;
+
+        //是否开启分帧测试
+        public bool isFrameDebug = false;
+
+        //分帧测试
+        [Range(1, 16)] public int frameDebug = 1;
     }
 
-    public mySetting setting = new mySetting();
-    VolumetricCloudPass myPass;
-    GameObject GO;
+    public Setting setting;
+    VolumetricCloudPass volumetricCloudPass;
+
     public override void Create()
-    {//进行初始化,这里最先开始
-
-        GO = GameObject.Find("Sphere");
-        if (GO == null)
-        {
-            //Debug.Log("No Sphere!");
-        }
-        myPass = new VolumetricCloudPass(setting.passEvent, setting.myMat, GO);//实例化一下并传参数,name就是tag
+    {
+        volumetricCloudPass = new VolumetricCloudPass(setting); //实例化一下并传参数,name就是tag
     }
+
     public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
     {
-
-        if (setting.myMat == null)
+        if (!setting.cloudMaterial)
         {
             Debug.LogError("材质球丢失！请设置材质球");
             return;
         }
-        renderer.EnqueuePass(myPass);
+
+        if (!(renderingData.cameraData.cameraType == CameraType.Game ||
+              renderingData.cameraData.cameraType == CameraType.SceneView))
+        {
+            return;
+        }
+
+        //云纹理分辨率
+        int width = (int)(renderingData.cameraData.cameraTargetDescriptor.width * setting.rtScale);
+        int height = (int)(renderingData.cameraData.cameraTargetDescriptor.height * setting.rtScale);
+
+        //不进行分帧渲染
+        if ( true|| setting.frameBlocking == FrameBlock._Off)
+        {
+            // for (int i = 0; i < 2; i++)
+            // {
+            //     //重置纹理
+            //     RenderTexture.ReleaseTemporary(_cloudTex_game[i]);
+            //     RenderTexture.ReleaseTemporary(_cloudTex_sceneView[i]);
+            //     _cloudTex_game = new RenderTexture[2];
+            //     _cloudTex_sceneView = new RenderTexture[2];
+            // }
+
+            volumetricCloudPass.width = width;
+            volumetricCloudPass.height = height;
+            //volumetricCloudPass.cameraColorTex = renderer.cameraColorTarget;
+            renderer.EnqueuePass(volumetricCloudPass);
+            return;
+        }
+
     }
-    
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
     }
-
 }
