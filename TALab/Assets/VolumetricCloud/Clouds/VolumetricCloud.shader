@@ -120,8 +120,7 @@ Shader "URPCustom/Volume/myRayMarching"
             {
                 float4 positionCS : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float2 uv_depth : TEXCOORD1;
-                float4 interpolatedRay : TEXCOORD2;
+                float4 interpolatedRay : TEXCOORD1;
             };
 
             float SampleCloudDensity(float3 currentPos)
@@ -391,7 +390,6 @@ Shader "URPCustom/Volume/myRayMarching"
                 v2f o;
                 o.positionCS = TransformObjectToHClip(i.positionOS.xyz);
                 o.uv = i.texcoord;
-                o.uv_depth = i.texcoord;
 
                 int index = 0;
                 if (i.texcoord.x < 0.5 && i.texcoord.y < 0.5)
@@ -411,13 +409,6 @@ Shader "URPCustom/Volume/myRayMarching"
                     index = 3;
                 }
 
-                #if UNITY_UV_STARTS_AT_TOP
-                if (_MainTex_TexelSize.y < 0)
-                {
-                    o.uv_depth.y = 1 - o.uv_depth.y;
-                    index = 3 - index;
-                }
-                #endif
                 o.interpolatedRay = _FrustumCornersRay[index];
                 return o;
             }
@@ -425,22 +416,23 @@ Shader "URPCustom/Volume/myRayMarching"
 
             half4 frag(v2f i) : SV_TARGET
             {
+                //half4 backgroundColor = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, i.uv, 0);
+                
                 //------------重建世界坐标-------------------------------------------------
-                float RawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv_depth);
+                float RawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, i.uv);
                 float3 positionWS = float3(0, 0, 0);
+            #if _INTERPO_ON //射线法重建世界坐标
                 float linearDepth = LinearEyeDepth(RawDepth, _ZBufferParams);
-                #if _INTERPO_ON //射线法重建世界坐标
-                positionWS = _WorldSpaceCameraPos + linearDepth * normalize(i.interpolatedRay.xyz);//normalize is nesssary
-                #else
+                positionWS = GetCameraPositionWS() + linearDepth * normalize(i.interpolatedRay.xyz);//normalize is nesssary
+            #else
                 positionWS = ComputeWorldSpacePosition(i.uv, RawDepth, UNITY_MATRIX_I_VP);
-                #endif
+            #endif
                 //return float4(positionWS.rgb, 1);
 
                 //------------每个像素进行raymarching-------------------------------------------------
-                float3 camPos = _WorldSpaceCameraPos;
+                float3 camPos = GetCameraPositionWS();
                 float3 viewDir = normalize(positionWS - camPos);
                 float camToOpaque = length(positionWS - camPos);
-                half3 backgroundColor = SAMPLE_TEXTURE2D_LOD(_MainTex, sampler_MainTex, i.uv, 0).rgb;
 
                 //准备数据
                 float3 EarthCenter = float3(camPos.x, -EarthRadius, camPos.z);
@@ -450,13 +442,7 @@ Shader "URPCustom/Volume/myRayMarching"
 
                 //开始raymarching
                 float4 cloudData = cloudRayMarchingEarth(camPos, viewDir, rayHitCloudInfo.x, inCloudMarchLimit, i.uv);
-
-                //---------------混合结果------------------------------------------------------------
-                float transmittance = cloudData.w;
-                float3 scattering = cloudData.xyz;
-                return half4(scattering, transmittance);
-                //return half4(scattering / (1 - transmittance), 1 - transmittance);
-                //return half4(transmittance * backgroundColor + scattering, 1);
+                return cloudData;
             }
             ENDHLSL
         }
