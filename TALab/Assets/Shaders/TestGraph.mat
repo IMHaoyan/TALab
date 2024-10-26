@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Test
+  m_Name: TestGraph
   m_Shader: {fileID: -6465566751694194690, guid: 8a119f43c798fb040bfad7fa31d3e8fa,
     type: 3}
   m_ValidKeywords: []

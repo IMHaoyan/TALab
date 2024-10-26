@@ -189,7 +189,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27906ec5d64556e4dbd83726f526d182, type: 3}
   m_Name: VolumetricCloudFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   setting:
     cloudMaterial: {fileID: 2100000, guid: 018aad1c2bba0f344991d60275b01fe5, type: 2}
     passEvent: 500
